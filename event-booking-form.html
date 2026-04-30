@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Event Booking Form</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --deep: #0f1923;
+      --panel: #162130;
+      --card: #1c2d3e;
+      --accent: #c9a96e;
+      --accent-light: #e8c98a;
+      --accent-dim: rgba(201,169,110,0.15);
+      --text: #e8e4dc;
+      --muted: #8a9bb0;
+      --border: rgba(201,169,110,0.2);
+      --border-focus: rgba(201,169,110,0.7);
+      --error: #e07070;
+      --success: #6ecfa0;
+      --radius: 12px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--deep);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 40px 16px 60px;
+      overflow-x: hidden;
+    }
+
+    /* Ambient background */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 15% 20%, rgba(201,169,110,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 60% at 85% 80%, rgba(30,80,140,0.12) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .wrapper {
+      width: 100%;
+      max-width: 760px;
+      animation: fadeUp 0.7s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── HEADER ── */
+    .header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 5px 18px;
+      margin-bottom: 18px;
+      background: var(--accent-dim);
+    }
+    .header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 700;
+      line-height: 1.15;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+    .header h1 em {
+      font-style: italic;
+      color: var(--accent);
+    }
+    .header p {
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 300;
+      max-width: 440px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03) inset;
+    }
+
+    /* ── PROGRESS BAR ── */
+    .progress-bar {
+      height: 3px;
+      background: rgba(255,255,255,0.06);
+      position: relative;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-light));
+      border-radius: 0 3px 3px 0;
+      transition: width 0.5s ease;
+      width: 33%;
+    }
+
+    /* ── STEPS NAV ── */
+    .steps-nav {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+    .step-tab {
+      flex: 1;
+      padding: 18px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.3s;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      background: none;
+      border-left: none;
+      border-right: none;
+      border-top: none;
+      position: relative;
+    }
+    .step-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .step-tab.done {
+      color: var(--success);
+    }
+    .step-num {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      border: 1.5px solid currentColor;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+    .step-tab.done .step-num {
+      background: var(--success);
+      border-color: var(--success);
+      color: #0f1923;
+    }
+    .step-tab.done .step-num::after { content: '✓'; }
+    .step-tab:not(.done) .step-num { /* show number */ }
+
+    /* ── FORM BODY ── */
+    .form-body {
+      padding: 36px 40px 40px;
+    }
+    @media (max-width: 520px) { .form-body { padding: 28px 20px 32px; } }
+
+    .step-panel { display: none; }
+    .step-panel.active { display: block; animation: fadeIn 0.35s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: none; } }
+
+    .step-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .step-desc {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+
+    /* ── GRID ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+    @media (max-width: 560px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+    .col-span-2 { grid-column: span 2; }
+    @media (max-width: 560px) { .col-span-2 { grid-column: span 1; } }
+
+    /* ── FIELD ── */
+    .field { display: flex; flex-direction: column; gap: 7px; }
+    .field label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .field label span { color: var(--accent); margin-left: 2px; }
+
+    .field input,
+    .field select,
+    .field textarea {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14.5px;
+      padding: 13px 16px;
+      outline: none;
+      transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+      width: 100%;
+      -webkit-appearance: none;
+    }
+    .field input::placeholder,
+    .field textarea::placeholder { color: rgba(138,155,176,0.5); }
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--border-focus);
+      background: #1e3248;
+      box-shadow: 0 0 0 3px rgba(201,169,110,0.08);
+    }
+    .field input.error,
+    .field select.error,
+    .field textarea.error {
+      border-color: var(--error);
+    }
+    .field .hint {
+      font-size: 11.5px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .field .err-msg {
+      font-size: 11.5px;
+      color: var(--error);
+      display: none;
+    }
+    .field.invalid .err-msg { display: block; }
+    .field.invalid label { color: var(--error); }
+
+    .field select {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a9bb0' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+    .field select option { background: #1c2d3e; color: var(--text); }
+
+    .field textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+
+    /* ── EVENT TYPE CARDS ── */
+    .event-types {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 480px) { .event-types { grid-template-columns: 1fr 1fr; } }
+
+    .event-type-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.25s;
+      position: relative;
+    }
+    .event-type-card:hover { border-color: rgba(201,169,110,0.45); background: #1e3248; }
+    .event-type-card.selected {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+    .event-type-card input[type=radio] { display: none; }
+    .et-icon { font-size: 26px; line-height: 1; }
+    .et-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
+    .event-type-card.selected .et-label { color: var(--accent); }
+    .event-type-card .check {
+      position: absolute;
+      top: 8px; right: 8px;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      color: #0f1923;
+      font-weight: 700;
+    }
+    .event-type-card.selected .check { display: flex; }
+
+    /* ── COUNTER ── */
+    .counter {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      width: fit-content;
+    }
+    .counter button {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: 20px;
+      width: 44px; height: 48px;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 300;
+    }
+    .counter button:hover { background: rgba(201,169,110,0.1); }
+    .counter span {
+      min-width: 56px;
+      text-align: center;
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text);
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      height: 48px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── ADDONS ── */
+    .addon-list { display: flex; flex-direction: column; gap: 10px; }
+    .addon-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.25s;
+      user-select: none;
+    }
+    .addon-item:hover { border-color: rgba(201,169,110,0.4); }
+    .addon-item input[type=checkbox] { display: none; }
+    .addon-check {
+      width: 20px; height: 20px;
+      border: 1.5px solid var(--border);
+      border-radius: 5px;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+      font-size: 11px;
+      color: transparent;
+    }
+    .addon-item.checked { border-color: var(--accent); background: var(--accent-dim); }
+    .addon-item.checked .addon-check {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #0f1923;
+      font-weight: 700;
+    }
+    .addon-icon { font-size: 20px; }
+    .addon-info { flex: 1; }
+    .addon-name { font-size: 14px; font-weight: 500; color: var(--text); }
+    .addon-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .addon-price {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 28px 0;
+    }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 14px;
+    }
+
+    /* ── SUMMARY ── */
+    .summary-block {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      gap: 12px;
+    }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-key { font-size: 13px; color: var(--muted); font-weight: 400; }
+    .summary-val { font-size: 13px; color: var(--text); font-weight: 500; text-align: right; }
+
+    .price-breakdown {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-top: 16px;
+    }
+    .price-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13.5px;
+      padding: 6px 0;
+      color: var(--muted);
+    }
+    .price-row.total {
+      padding-top: 14px;
+      margin-top: 8px;
+      border-top: 1px solid var(--border);
+      color: var(--text);
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .price-row.total span:last-child { color: var(--accent); }
+
+    /* ── PAYMENT ── */
+    .payment-methods {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+    .pm-btn {
+      flex: 1;
+      padding: 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .pm-btn.active {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+    .pm-btn:hover:not(.active) { border-color: rgba(201,169,110,0.3); }
+
+    .card-input-group {
+      position: relative;
+    }
+    .card-icons {
+      position: absolute;
+      right: 14px; top: 50%;
+      transform: translateY(-50%);
+      display: flex; gap: 5px;
+      pointer-events: none;
+    }
+    .card-icon {
+      width: 30px; height: 20px;
+      border-radius: 3px;
+      font-size: 8px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      letter-spacing: 0.3px;
+    }
+    .card-icon.visa { background: #1a1f71; color: #fff; }
+    .card-icon.mc { background: #eb001b; color: #fff; position: relative; }
+
+    /* ── NAV BUTTONS ── */
+    .nav-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 36px;
+      gap: 14px;
+    }
+    .btn {
+      padding: 14px 28px;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.25s;
+      display: flex; align-items: center; gap: 8px;
+      letter-spacing: 0.3px;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .btn-outline:hover { border-color: rgba(201,169,110,0.5); color: var(--text); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent) 0%, #b8893e 100%);
+      color: #0f1923;
+      box-shadow: 0 6px 24px rgba(201,169,110,0.3);
+      flex: 1;
+      justify-content: center;
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 32px rgba(201,169,110,0.42);
+    }
+    .btn-primary:active { transform: translateY(0); }
+
+    /* ── SUCCESS ── */
+    .success-screen {
+      display: none;
+      text-align: center;
+      padding: 60px 40px;
+      animation: fadeIn 0.5s ease;
+    }
+    .success-screen.show { display: block; }
+    .success-icon {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--success), #3aaa78);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 34px;
+      margin: 0 auto 24px;
+      box-shadow: 0 12px 40px rgba(110,207,160,0.35);
+    }
+    .success-screen h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+    .success-screen p { color: var(--muted); font-size: 15px; line-height: 1.6; max-width: 380px; margin: 0 auto 30px; }
+    .booking-ref {
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 22px;
+    }
+
+    /* ── TOOLTIP-LIKE HINT ── */
+    .info-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11.5px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 6px;
+      padding: 5px 10px;
+      margin-top: 14px;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 480px) {
+      .steps-nav { overflow-x: auto; }
+      .step-tab .step-label { display: none; }
+      .payment-methods { flex-wrap: wrap; }
+      .nav-row { flex-direction: column-reverse; }
+      .btn-outline { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="badge">✦ Reserve Your Experience</div>
+    <h1>Book Your <em>Perfect</em> Event</h1>
+    <p>Fill in the details below and we'll tailor everything to make your occasion truly unforgettable.</p>
+  </div>
+
+  <!-- CARD -->
+  <div class="card">
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+    <!-- STEP TABS -->
+    <div class="steps-nav">
+      <button class="step-tab active" data-step="1">
+        <div class="step-num" data-num="1">1</div>
+        <span class="step-label">Event Details</span>
+      </button>
+      <button class="step-tab" data-step="2">
+        <div class="step-num" data-num="2">2</div>
+        <span class="step-label">Preferences</span>
+      </button>
+      <button class="step-tab" data-step="3">
+        <div class="step-tab" data-step="3"></div>
+        <div class="step-num" data-num="3">3</div>
+        <span class="step-label">Review & Pay</span>
+      </button>
+    </div>
+
+    <div class="form-body">
+
+      <!-- ── STEP 1: EVENT DETAILS ── -->
+      <div class="step-panel active" id="step-1">
+        <div class="step-title">Tell us about your event</div>
+        <div class="step-desc">Choose the type of event and provide the core information to get started.</div>
+
+        <div class="section-label">Event Type</div>
+        <div class="event-types">
+          <label class="event-type-card selected" onclick="selectEventType(this)">
+            <input type="radio" name="eventType" value="conference" checked>
+            <div class="check">✓</div>
+            <div class="et-icon">🏛️</div>
+            <div class="et-label">Conference</div>
+          </label>
+          <label class="event-type-card" onclick="selectEventType(this)">
+            <input type="radio" name="eventType" value="wedding">
+            <div class="check">✓</div>
+            <div class="et-icon">💍</div>
+            <div class="et-label">Wedding</div>
+          </label>
+          <label class="event-type-card" onclick="selectEventType(this)">
+            <input type="radio" name="eventType" value="birthday">
+            <div class="check">✓</div>
+            <div class="et-icon">🎂</div>
+            <div class="et-label">Birthday</div>
+          </label>
+          <label class="event-type-card" onclick="selectEventType(this)">
+            <input type="radio" name="eventType" value="corporate">
+            <div class="check">✓</div>
+            <div class="et-icon">💼</div>
+            <div class="et-label">Corporate</div>
+          </label>
+          <label class="event-type-card" onclick="selectEventType(this)">
+            <input type="radio" name="eventType" value="concert">
+            <div class="check">✓</div>
+            <div class="et-icon">🎶</div>
+            <div class="et-label">Concert</div>
+          </label>
+          <label class="event-type-card" onclick="selectEventType(this)">
+            <input type="radio" name="eventType" value="other">
+            <div class="check">✓</div>
+            <div class="et-icon">✨</div>
+            <div class="et-label">Other</div>
+          </label>
+        </div>
+
+        <div class="grid-2" style="gap:18px; margin-bottom:18px;">
+          <div class="field col-span-2">
+            <label>Event Name <span>*</span></label>
+            <input type="text" id="eventName" placeholder="e.g. Annual Tech Summit 2025" />
+            <div class="err-msg">Please enter the event name.</div>
+          </div>
+          <div class="field">
+            <label>Date <span>*</span></label>
+            <input type="date" id="eventDate" min="" />
+            <div class="err-msg">Please select a date.</div>
+          </div>
+          <div class="field">
+            <label>Start Time <span>*</span></label>
+            <input type="time" id="eventTime" value="10:00"/>
+            <div class="err-msg">Please select a time.</div>
+          </div>
+          <div class="field">
+            <label>Duration</label>
+            <select id="eventDuration">
+              <option value="2">2 hours</option>
+              <option value="3">3 hours</option>
+              <option value="4">4 hours</option>
+              <option value="6" selected>6 hours</option>
+              <option value="8">Full day (8 hrs)</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Venue / Location <span>*</span></label>
+            <input type="text" id="eventVenue" placeholder="Grand Hall, Kigali Convention Centre"/>
+            <div class="err-msg">Please enter a venue.</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-label">Organiser Information</div>
+
+        <div class="grid-2" style="gap:18px; margin-bottom:18px;">
+          <div class="field">
+            <label>First Name <span>*</span></label>
+            <input type="text" id="firstName" placeholder="Jean"/>
+            <div class="err-msg">Required.</div>
+          </div>
+          <div class="field">
+            <label>Last Name <span>*</span></label>
+            <input type="text" id="lastName" placeholder="Mugisha"/>
+            <div class="err-msg">Required.</div>
+          </div>
+          <div class="field">
+            <label>Email Address <span>*</span></label>
+            <input type="email" id="email" placeholder="jean@example.com"/>
+            <div class="err-msg">Enter a valid email.</div>
+          </div>
+          <div class="field">
+            <label>Phone Number <span>*</span></label>
+            <input type="tel" id="phone" placeholder="+250 788 000 000"/>
+            <div class="err-msg">Required.</div>
+          </div>
+          <div class="field col-span-2">
+            <label>Organisation / Company</label>
+            <input type="text" id="organisation" placeholder="Optional"/>
+          </div>
+        </div>
+
+        <div class="nav-row">
+          <button class="btn btn-primary" onclick="goStep(2)">Continue → Preferences</button>
+        </div>
+      </div>
+
+      <!-- ── STEP 2: PREFERENCES ── -->
+      <div class="step-panel" id="step-2">
+        <div class="step-title">Customise your experience</div>
+        <div class="step-desc">Set the guest count and pick the add-ons that elevate your event.</div>
+
+        <div class="section-label">Number of Guests</div>
+        <div style="margin-bottom:28px;">
+          <div style="display:flex; align-items:center; gap:24px; flex-wrap:wrap;">
+            <div class="counter">
+              <button onclick="changeGuests(-10)">−</button>
+              <span id="guestCount">50</span>
+              <button onclick="changeGuests(10)">+</button>
+            </div>
+            <div class="field" style="flex:1; min-width:160px;">
+              <label>Or enter exact number</label>
+              <input type="number" id="guestInput" min="1" max="5000" value="50" oninput="syncGuests(this.value)" placeholder="50"/>
+            </div>
+          </div>
+          <div class="info-tag">ℹ️ Venue capacity max: 500 guests. Contact us for larger events.</div>
+        </div>
+
+        <div class="section-label">Seating Arrangement</div>
+        <div class="field" style="margin-bottom:28px; max-width:320px;">
+          <select id="seating">
+            <option value="theater">Theatre Style</option>
+            <option value="classroom">Classroom Style</option>
+            <option value="banquet" selected>Banquet / Round Tables</option>
+            <option value="cocktail">Cocktail / Standing</option>
+            <option value="boardroom">Boardroom</option>
+            <option value="ushape">U-Shape</option>
+          </select>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-label">Add-Ons & Services</div>
+
+        <div class="addon-list" id="addonList">
+          <label class="addon-item" onclick="toggleAddon(this, 150)">
+            <input type="checkbox" value="catering">
+            <div class="addon-check">✓</div>
+            <div class="addon-icon">🍽️</div>
+            <div class="addon-info">
+              <div class="addon-name">Full Catering</div>
+              <div class="addon-desc">3-course buffet meal with beverages for all guests</div>
+            </div>
+            <div class="addon-price">+$150/head</div>
+          </label>
+          <label class="addon-item" onclick="toggleAddon(this, 800)">
+            <input type="checkbox" value="av">
+            <div class="addon-check">✓</div>
+            <div class="addon-icon">🎙️</div>
+            <div class="addon-info">
+              <div class="addon-name">AV & Stage Equipment</div>
+              <div class="addon-desc">Microphones, projector, LED stage, sound engineer</div>
+            </div>
+            <div class="addon-price">+$800</div>
+          </label>
+          <label class="addon-item" onclick="toggleAddon(this, 400)">
+            <input type="checkbox" value="photo">
+            <div class="addon-check">✓</div>
+            <div class="addon-icon">📸</div>
+            <div class="addon-info">
+              <div class="addon-name">Photography & Video</div>
+              <div class="addon-desc">Professional team, edited gallery within 5 days</div>
+            </div>
+            <div class="addon-price">+$400</div>
+          </label>
+          <label class="addon-item" onclick="toggleAddon(this, 250)">
+            <input type="checkbox" value="decor">
+            <div class="addon-check">✓</div>
+            <div class="addon-icon">🌸</div>
+            <div class="addon-info">
+              <div class="addon-name">Floral & Décor Package</div>
+              <div class="addon-desc">Themed centerpieces, backdrops, table décor</div>
+            </div>
+            <div class="addon-price">+$250</div>
+          </label>
+          <label class="addon-item" onclick="toggleAddon(this, 600)">
+            <input type="checkbox" value="security">
+            <div class="addon-check">✓</div>
+            <div class="addon-icon">🛡️</div>
+            <div class="addon-info">
+              <div class="addon-name">Security & Crowd Management</div>
+              <div class="addon-desc">Licensed security team for the full event duration</div>
+            </div>
+            <div class="addon-price">+$600</div>
+          </label>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-label">Special Requests</div>
+        <div class="field" style="margin-bottom:0;">
+          <textarea id="specialRequests" placeholder="Any dietary requirements, accessibility needs, theme preferences, or specific arrangements…"></textarea>
+        </div>
+
+        <div class="nav-row">
+          <button class="btn btn-outline" onclick="goStep(1)">← Back</button>
+          <button class="btn btn-primary" onclick="goStep(3)">Review Booking →</button>
+        </div>
+      </div>
+
+      <!-- ── STEP 3: REVIEW & PAY ── -->
+      <div class="step-panel" id="step-3">
+        <div class="step-title">Review & confirm your booking</div>
+        <div class="step-desc">Please check all details before completing your reservation.</div>
+
+        <div class="section-label">Booking Summary</div>
+        <div class="summary-block" id="summaryBlock">
+          <!-- Populated by JS -->
+        </div>
+
+        <div class="price-breakdown" id="priceBlock">
+          <!-- Populated by JS -->
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-label">Payment Details</div>
+
+        <div class="payment-methods">
+          <button class="pm-btn active" onclick="selectPM(this)">💳 Card</button>
+          <button class="pm-btn" onclick="selectPM(this)">🏦 Bank Transfer</button>
+          <button class="pm-btn" onclick="selectPM(this)">📱 Mobile Money</button>
+        </div>
+
+        <div id="cardFields">
+          <div class="field" style="margin-bottom:16px; position:relative;">
+            <label>Cardholder Name <span>*</span></label>
+            <div class="card-input-group">
+              <input type="text" id="cardName" placeholder="Jean Mugisha"/>
+            </div>
+            <div class="err-msg">Required.</div>
+          </div>
+          <div class="field" style="margin-bottom:16px;">
+            <label>Card Number <span>*</span></label>
+            <div class="card-input-group">
+              <input type="text" id="cardNum" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCard(this)"/>
+              <div class="card-icons">
+                <div class="card-icon visa">VISA</div>
+                <div class="card-icon mc">MC</div>
+              </div>
+            </div>
+            <div class="err-msg">Enter a valid 16-digit card number.</div>
+          </div>
+          <div class="grid-2" style="gap:16px; margin-bottom:0;">
+            <div class="field">
+              <label>Expiry Date <span>*</span></label>
+              <input type="text" id="cardExp" placeholder="MM / YY" maxlength="7" oninput="formatExpiry(this)"/>
+              <div class="err-msg">Required.</div>
+            </div>
+            <div class="field">
+              <label>CVV / CVC <span>*</span></label>
+              <input type="text" id="cardCvv" placeholder="•••" maxlength="4" oninput="this.value=this.value.replace(/\D/g,'')"/>
+              <div class="err-msg">Required.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-tag" style="margin-top:18px;">🔒 Your payment is encrypted and secured with SSL/TLS. We never store raw card data.</div>
+
+        <div class="nav-row">
+          <button class="btn btn-outline" onclick="goStep(2)">← Back</button>
+          <button class="btn btn-primary" onclick="submitBooking()">✦ Confirm & Pay</button>
+        </div>
+      </div>
+
+    </div><!-- /form-body -->
+
+    <!-- SUCCESS -->
+    <div class="success-screen" id="successScreen">
+      <div class="success-icon">✓</div>
+      <h2>Booking Confirmed!</h2>
+      <p>Your event has been successfully booked. A confirmation email has been sent to <strong id="confirmEmail"></strong>.</p>
+      <div class="booking-ref" id="bookingRef">REF: EVT-000000</div>
+    </div>
+
+  </div><!-- /card -->
+
+</div>
+
+<script>
+  // ── State ──
+  let currentStep = 1;
+  let guestCount = 50;
+  let addonTotal = 0;
+  const BASE_PRICE = 1200;
+
+  // ── Set min date to today ──
+  document.getElementById('eventDate').min = new Date().toISOString().split('T')[0];
+
+  // ── Event type selection ──
+  function selectEventType(card) {
+    document.querySelectorAll('.event-type-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    card.querySelector('input[type=radio]').checked = true;
+  }
+
+  // ── Guest counter ──
+  function changeGuests(delta) {
+    guestCount = Math.max(1, Math.min(500, guestCount + delta));
+    document.getElementById('guestCount').textContent = guestCount;
+    document.getElementById('guestInput').value = guestCount;
+  }
+  function syncGuests(val) {
+    guestCount = Math.max(1, Math.min(500, parseInt(val) || 1));
+    document.getElementById('guestCount').textContent = guestCount;
+  }
+
+  // ── Add-ons ──
+  function toggleAddon(item, price) {
+    item.classList.toggle('checked');
+    const cb = item.querySelector('input[type=checkbox]');
+    cb.checked = !cb.checked;
+    recalcAddons();
+  }
+  function recalcAddons() {
+    addonTotal = 0;
+    document.querySelectorAll('.addon-item.checked').forEach(item => {
+      const priceText = item.querySelector('.addon-price').textContent;
+      const match = priceText.match(/\d+/);
+      if (match) {
+        const val = parseInt(match[0]);
+        // per-head items
+        if (priceText.includes('/head')) addonTotal += val * guestCount;
+        else addonTotal += val;
+      }
+    });
+  }
+
+  // ── Payment method ──
+  function selectPM(btn) {
+    document.querySelectorAll('.pm-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  // ── Card formatters ──
+  function formatCard(el) {
+    let v = el.value.replace(/\D/g,'').substring(0,16);
+    el.value = v.replace(/(.{4})/g,'$1 ').trim();
+  }
+  function formatExpiry(el) {
+    let v = el.value.replace(/\D/g,'').substring(0,4);
+    if (v.length >= 3) v = v.substring(0,2) + ' / ' + v.substring(2);
+    el.value = v;
+  }
+
+  // ── Step navigation ──
+  function goStep(n) {
+    if (n > currentStep && !validateStep(currentStep)) return;
+    currentStep = n;
+    // Panels
+    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('step-' + n).classList.add('active');
+    // Tabs
+    document.querySelectorAll('.step-tab').forEach((tab, i) => {
+      tab.classList.remove('active','done');
+      if (i + 1 < n) tab.classList.add('done');
+      if (i + 1 === n) tab.classList.add('active');
+      const numEl = tab.querySelector('.step-num');
+      if (numEl) numEl.textContent = i + 1 < n ? '' : (i + 1);
+    });
+    // Progress
+    document.getElementById('progress').style.width = (n === 1 ? 33 : n === 2 ? 66 : 100) + '%';
+    if (n === 3) buildSummary();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── Validation ──
+  function validateStep(s) {
+    let ok = true;
+    const check = (id, test) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const field = el.closest('.field');
+      const pass = test(el.value.trim());
+      field && field.classList.toggle('invalid', !pass);
+      el.classList.toggle('error', !pass);
+      if (!pass) ok = false;
+    };
+    if (s === 1) {
+      check('eventName', v => v.length > 1);
+      check('eventDate', v => v.length > 0);
+      check('eventTime', v => v.length > 0);
+      check('eventVenue', v => v.length > 1);
+      check('firstName', v => v.length > 0);
+      check('lastName', v => v.length > 0);
+      check('email', v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
+      check('phone', v => v.length > 5);
+    }
+    return ok;
+  }
+
+  // ── Summary builder ──
+  function buildSummary() {
+    recalcAddons();
+    const rows = [
+      ['Event Type', document.querySelector('.event-type-card.selected .et-label')?.textContent || '-'],
+      ['Event Name', document.getElementById('eventName').value || '-'],
+      ['Date & Time', (document.getElementById('eventDate').value || '-') + ' at ' + (document.getElementById('eventTime').value || '-')],
+      ['Venue', document.getElementById('eventVenue').value || '-'],
+      ['Duration', document.getElementById('eventDuration').options[document.getElementById('eventDuration').selectedIndex]?.text || '-'],
+      ['Organiser', (document.getElementById('firstName').value + ' ' + document.getElementById('lastName').value).trim() || '-'],
+      ['Email', document.getElementById('email').value || '-'],
+      ['Guests', guestCount],
+      ['Seating', document.getElementById('seating').options[document.getElementById('seating').selectedIndex]?.text || '-'],
+    ];
+    const addons = [...document.querySelectorAll('.addon-item.checked')].map(a => a.querySelector('.addon-name').textContent).join(', ') || 'None';
+    rows.push(['Add-Ons', addons]);
+
+    document.getElementById('summaryBlock').innerHTML = rows.map(([k,v]) =>
+      `<div class="summary-row"><span class="summary-key">${k}</span><span class="summary-val">${v}</span></div>`
+    ).join('');
+
+    const tax = Math.round((BASE_PRICE + addonTotal) * 0.15);
+    const total = BASE_PRICE + addonTotal + tax;
+    document.getElementById('priceBlock').innerHTML = `
+      <div class="price-row"><span>Venue & Base Package</span><span>$${BASE_PRICE.toLocaleString()}</span></div>
+      <div class="price-row"><span>Add-Ons</span><span>$${addonTotal.toLocaleString()}</span></div>
+      <div class="price-row"><span>Tax (15%)</span><span>$${tax.toLocaleString()}</span></div>
+      <div class="price-row total"><span>Total Due</span><span>$${total.toLocaleString()}</span></div>
+    `;
+  }
+
+  // ── Submit ──
+  function submitBooking() {
+    // simple card validation
+    let ok = true;
+    const activeMethod = document.querySelector('.pm-btn.active').textContent;
+    if (activeMethod.includes('Card')) {
+      ['cardName','cardNum','cardExp','cardCvv'].forEach(id => {
+        const el = document.getElementById(id);
+        const field = el?.closest('.field');
+        const empty = !el?.value?.trim();
+        field?.classList.toggle('invalid', empty);
+        el?.classList.toggle('error', empty);
+        if (empty) ok = false;
+      });
+    }
+    if (!ok) return;
+
+    // Hide form panels, show success
+    document.querySelector('.steps-nav').style.display = 'none';
+    document.querySelector('.progress-bar').style.display = 'none';
+    document.querySelector('.form-body').style.display = 'none';
+    document.getElementById('confirmEmail').textContent = document.getElementById('email').value;
+    const ref = 'EVT-' + Math.floor(100000 + Math.random() * 900000);
+    document.getElementById('bookingRef').textContent = 'REF: ' + ref;
+    document.getElementById('successScreen').classList.add('show');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>

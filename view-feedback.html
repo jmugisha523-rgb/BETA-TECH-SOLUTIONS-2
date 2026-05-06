@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Beta Tech | View Feedback</title>
+    <style>
+        body { background: #0f172a; color: white; font-family: sans-serif; padding: 50px; }
+        .container { max-width: 800px; margin: auto; background: #1e293b; padding: 20px; border-radius: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; }
+        th { background: #38bdf8; color: #0f172a; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Submitted Feedback</h2>
+        <table id="feedbackTable">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>User Name</th>
+                    <th>Stars</th>
+                    <th>Comments</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- Data will appear here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const tableBody = document.getElementById('tableBody');
+        const allFeedback = JSON.parse(localStorage.getItem('userFeedback')) || [];
+
+        // Loop through data and create rows
+        allFeedback.forEach(item => {
+            const row = `<tr>
+                <td>${item.date}</td>
+                <td>${item.name}</td>
+                <td>${'⭐'.repeat(item.rating)}</td>
+                <td>${item.comments}</td>
+            </tr>`;
+            tableBody.innerHTML += row;
+        });
+    </script>
+</body>
+</html>

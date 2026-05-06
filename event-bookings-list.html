@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Event Bookings List</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f4f0;
+      --surface: #ffffff;
+      --border: rgba(0,0,0,0.08);
+      --border-md: rgba(0,0,0,0.13);
+      --text: #1a1a1a;
+      --muted: #6b6b6b;
+      --radius: 10px;
+      --radius-lg: 14px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 36px 20px 60px;
+    }
+
+    .page-header {
+      max-width: 1100px;
+      margin: 0 auto 28px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .page-header h1 {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .page-header p {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+    .export-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      background: var(--surface);
+      border: 0.5px solid var(--border-md);
+      border-radius: var(--radius);
+      padding: 8px 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .export-btn:hover { background: #f0efe9; }
+
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    /* Stats */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 14px 18px;
+    }
+    .stat-val {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1;
+    }
+    .stat-lbl {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 5px;
+    }
+
+    /* Toolbar */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 200px;
+    }
+    .search-wrap i {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+    .search-wrap input {
+      width: 100%;
+      padding: 9px 12px 9px 34px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13.5px;
+      border: 0.5px solid var(--border-md);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-wrap input:focus {
+      border-color: #888;
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+    }
+    .search-wrap input::placeholder { color: #aaa; }
+
+    select {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      padding: 9px 32px 9px 12px;
+      border: 0.5px solid var(--border-md);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b6b6b' stroke-width='1.5' stroke-linecap='round' fill='none'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      transition: border-color 0.2s;
+    }
+    select:focus { border-color: #888; }
+    select option { background: #fff; }
+
+    /* Table card */
+    .table-card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .tbl-wrap { width: 100%; overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      table-layout: fixed;
+    }
+    col.c-name   { width: 22%; }
+    col.c-event  { width: 22%; }
+    col.c-type   { width: 12%; }
+    col.c-guests { width: 9%;  }
+    col.c-date   { width: 14%; }
+    col.c-time   { width: 11%; }
+    col.c-status { width: 10%; }
+
+    thead { border-bottom: 0.5px solid var(--border-md); }
+    th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 11px 16px;
+      white-space: nowrap;
+      background: #fafaf8;
+    }
+    th.sortable { cursor: pointer; user-select: none; }
+    th.sortable:hover { color: var(--text); }
+    th .sort-icon { margin-left: 4px; opacity: 0.4; font-size: 10px; }
+    th.asc .sort-icon::after  { content: '▲'; }
+    th.desc .sort-icon::after { content: '▼'; }
+    th:not(.asc):not(.desc) .sort-icon::after { content: '⇅'; }
+
+    td {
+      padding: 13px 16px;
+      border-bottom: 0.5px solid var(--border);
+      color: var(--text);
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tbody tr { transition: background 0.15s; }
+    tbody tr:hover { background: #fafaf8; }
+
+    .name-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 600;
+      flex-shrink: 0;
+    }
+    .name-text { min-width: 0; }
+    .name-text strong {
+      display: block;
+      font-weight: 500;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ref-code {
+      font-family: monospace;
+      font-size: 10.5px;
+      color: var(--muted);
+    }
+
+    .event-name {
+      font-weight: 400;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .type-pill {
+      display: inline-block;
+      font-size: 11px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      border: 0.5px solid var(--border-md);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .b-conf { background: #E1F5EE; color: #085041; }
+    .b-pend { background: #FAEEDA; color: #633806; }
+    .b-canc { background: #FCEBEB; color: #791F1F; }
+
+    .date-cell { white-space: nowrap; }
+    .time-cell { white-space: nowrap; color: var(--muted); }
+    .guests-cell { font-variant-numeric: tabular-nums; }
+
+    .empty {
+      text-align: center;
+      padding: 3rem;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    /* Footer */
+    .table-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 16px;
+      border-top: 0.5px solid var(--border);
+      font-size: 12px;
+      color: var(--muted);
+      background: #fafaf8;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    @media (max-width: 600px) {
+      col.c-type, col.c-guests { width: 0; display: none; }
+      th:nth-child(3), td:nth-child(3),
+      th:nth-child(4), td:nth-child(4) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <h1>Event Bookings</h1>
+      <p>All registered bookings — search, filter, and sort by column.</p>
+    </div>
+    <button class="export-btn" onclick="exportCSV()">
+      <i class="ti ti-download" aria-hidden="true"></i> Export CSV
+    </button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stat-row" id="stats"></div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <i class="ti ti-search" aria-hidden="true"></i>
+      <input type="text" id="search" placeholder="Search name or event…" oninput="render()"/>
+    </div>
+    <select id="filterType" onchange="render()">
+      <option value="">All types</option>
+      <option>Conference</option>
+      <option>Wedding</option>
+      <option>Birthday</option>
+      <option>Corporate</option>
+      <option>Concert</option>
+      <option>Other</option>
+    </select>
+    <select id="filterStatus" onchange="render()">
+      <option value="">All statuses</option>
+      <option>Confirmed</option>
+      <option>Pending</option>
+      <option>Cancelled</option>
+    </select>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <div class="tbl-wrap">
+      <table>
+        <colgroup>
+          <col class="c-name"/>
+          <col class="c-event"/>
+          <col class="c-type"/>
+          <col class="c-guests"/>
+          <col class="c-date"/>
+          <col class="c-time"/>
+          <col class="c-status"/>
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="sortable" onclick="sortBy('name')">Attendee <span class="sort-icon"></span></th>
+            <th class="sortable" onclick="sortBy('event')">Event name <span class="sort-icon"></span></th>
+            <th>Type</th>
+            <th class="sortable" onclick="sortBy('guests')">Guests <span class="sort-icon"></span></th>
+            <th class="sortable" onclick="sortBy('date')">Date <span class="sort-icon"></span></th>
+            <th>Time</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="table-footer" id="footer"></div>
+  </div>
+
+</div>
+
+<script>
+  const COLORS = [
+    ['#E6F1FB','#0C447C'],['#E1F5EE','#085041'],['#FAEEDA','#633806'],
+    ['#EEEDFE','#3C3489'],['#FAECE7','#712B13'],['#FBEAF0','#72243E'],
+    ['#EAF3DE','#27500A'],['#FCEBEB','#791F1F'],['#F1EFE8','#444441'],
+  ];
+
+  function initials(n) {
+    const p = n.trim().split(' ');
+    return (p[0][0] + (p[p.length - 1][0] || '')).toUpperCase();
+  }
+  function avatarColor(name) {
+    return COLORS[name.charCodeAt(0) % COLORS.length];
+  }
+  function fmtDate(d) {
+    const [y, m, da] = d.split('-');
+    const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${da} ${mo[+m - 1]} ${y}`;
+  }
+  function fmtTime(t) {
+    const [h, m] = t.split(':');
+    const ap = +h >= 12 ? 'PM' : 'AM';
+    return `${+h % 12 || 12}:${m} ${ap}`;
+  }
+
+  const bookings = [
+    { name:'Jean Mugisha',            event:'Annual Tech Summit 2025',         type:'Conference', guests:120, date:'2025-07-14', time:'09:00', status:'Confirmed', ref:'EVT-482910' },
+    { name:'Amina Uwase',             event:'Uwase & Ndayishimiye Wedding',     type:'Wedding',    guests:250, date:'2025-08-02', time:'14:00', status:'Confirmed', ref:'EVT-391045' },
+    { name:'Patrick Habimana',        event:'Creative Industries Forum',        type:'Conference', guests:80,  date:'2025-07-22', time:'08:30', status:'Pending',   ref:'EVT-203847' },
+    { name:'Grace Iradukunda',        event:"Grace's 30th Celebration",         type:'Birthday',   guests:60,  date:'2025-07-05', time:'18:00', status:'Confirmed', ref:'EVT-117293' },
+    { name:'Eric Nkurunziza',         event:'MTN Rwanda Q3 Strategy Day',       type:'Corporate',  guests:45,  date:'2025-07-18', time:'08:00', status:'Confirmed', ref:'EVT-658204' },
+    { name:'Solange Uwimana',         event:'Kigali Jazz Nights Vol. 4',        type:'Concert',    guests:400, date:'2025-08-10', time:'19:30', status:'Pending',   ref:'EVT-774920' },
+    { name:'David Kamara',            event:'Pan-Africa Youth Summit',          type:'Conference', guests:300, date:'2025-09-01', time:'08:00', status:'Confirmed', ref:'EVT-920341' },
+    { name:'Claudette Mukabutera',    event:'Mukabutera Family Reunion',        type:'Other',      guests:90,  date:'2025-07-26', time:'11:00', status:'Confirmed', ref:'EVT-341082' },
+    { name:'Olivier Niyomugabo',      event:'Startup Pitch Night Kigali',       type:'Corporate',  guests:150, date:'2025-08-05', time:'17:00', status:'Cancelled', ref:'EVT-509173' },
+    { name:'Yvette Ingabire',         event:'Ingabire & Tuyishime Wedding',     type:'Wedding',    guests:200, date:'2025-08-30', time:'13:00', status:'Confirmed', ref:'EVT-861540' },
+    { name:'Fabrice Ntakirutimana',   event:'Digital Health Symposium',         type:'Conference', guests:110, date:'2025-09-12', time:'09:00', status:'Pending',   ref:'EVT-290756' },
+    { name:'Nadine Mukamana',         event:"Nadine's Sweet 16",               type:'Birthday',   guests:40,  date:'2025-07-19', time:'15:00', status:'Confirmed', ref:'EVT-133068' },
+    { name:'Thierry Buregeya',        event:'Rwanda Film Festival Gala',        type:'Concert',    guests:500, date:'2025-10-03', time:'18:30', status:'Pending',   ref:'EVT-712834' },
+    { name:'Sylvie Nyiransengimana',  event:'Agri-Business Expo 2025',          type:'Corporate',  guests:75,  date:'2025-08-20', time:'08:00', status:'Confirmed', ref:'EVT-490123' },
+    { name:'Emmanuel Gasana',         event:'Gasana 50th Anniversary',          type:'Birthday',   guests:130, date:'2025-09-06', time:'17:00', status:'Cancelled', ref:'EVT-382019' },
+  ];
+
+  let sortKey = 'date';
+  let sortDir = 'asc';
+
+  function sortBy(key) {
+    if (sortKey === key) {
+      sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortKey = key;
+      sortDir = 'asc';
+    }
+    document.querySelectorAll('th.sortable').forEach(th => {
+      th.classList.remove('asc', 'desc');
+    });
+    const idx = ['name','event','','guests','date'].indexOf(key);
+    const ths = document.querySelectorAll('th.sortable');
+    ths.forEach(th => {
+      if (th.getAttribute('onclick') === `sortBy('${key}')`) {
+        th.classList.add(sortDir);
+      }
+    });
+    render();
+  }
+
+  function render() {
+    const q  = document.getElementById('search').value.toLowerCase();
+    const ft = document.getElementById('filterType').value;
+    const fs = document.getElementById('filterStatus').value;
+
+    let data = bookings.filter(b => {
+      const match = (b.name + b.event).toLowerCase().includes(q);
+      return match && (!ft || b.type === ft) && (!fs || b.status === fs);
+    });
+
+    data.sort((a, b) => {
+      let va = a[sortKey], vb = b[sortKey];
+      if (sortKey === 'guests') { va = +va; vb = +vb; }
+      const cmp = va < vb ? -1 : va > vb ? 1 : 0;
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+
+    // Stats
+    const conf   = data.filter(b => b.status === 'Confirmed').length;
+    const pend   = data.filter(b => b.status === 'Pending').length;
+    const canc   = data.filter(b => b.status === 'Cancelled').length;
+    const guests = data.reduce((s, b) => s + b.guests, 0);
+    document.getElementById('stats').innerHTML = `
+      <div class="stat"><div class="stat-val">${data.length}</div><div class="stat-lbl">Total bookings</div></div>
+      <div class="stat"><div class="stat-val" style="color:#0F6E56">${conf}</div><div class="stat-lbl">Confirmed</div></div>
+      <div class="stat"><div class="stat-val" style="color:#BA7517">${pend}</div><div class="stat-lbl">Pending</div></div>
+      <div class="stat"><div class="stat-val" style="color:#A32D2D">${canc}</div><div class="stat-lbl">Cancelled</div></div>
+      <div class="stat"><div class="stat-val">${guests.toLocaleString()}</div><div class="stat-lbl">Total guests</div></div>
+    `;
+
+    // Rows
+    const tbody = document.getElementById('tbody');
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="7" class="empty">No bookings match your filters.</td></tr>`;
+      document.getElementById('footer').textContent = 'No results';
+      return;
+    }
+
+    tbody.innerHTML = data.map(b => {
+      const [bg, fg] = avatarColor(b.name);
+      const badge = b.status === 'Confirmed' ? 'b-conf' : b.status === 'Pending' ? 'b-pend' : 'b-canc';
+      return `<tr>
+        <td>
+          <div class="name-cell">
+            <div class="avatar" style="background:${bg};color:${fg}">${initials(b.name)}</div>
+            <div class="name-text">
+              <strong title="${b.name}">${b.name}</strong>
+              <span class="ref-code">${b.ref}</span>
+            </div>
+          </div>
+        </td>
+        <td><span class="event-name" title="${b.event}">${b.event}</span></td>
+        <td><span class="type-pill">${b.type}</span></td>
+        <td class="guests-cell">${b.guests}</td>
+        <td class="date-cell">${fmtDate(b.date)}</td>
+        <td class="time-cell">${fmtTime(b.time)}</td>
+        <td><span class="badge ${badge}">${b.status}</span></td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('footer').textContent =
+      `Showing ${data.length} of ${bookings.length} bookings`;
+  }
+
+  function exportCSV() {
+    const q  = document.getElementById('search').value.toLowerCase();
+    const ft = document.getElementById('filterType').value;
+    const fs = document.getElementById('filterStatus').value;
+    const data = bookings.filter(b => {
+      const match = (b.name + b.event).toLowerCase().includes(q);
+      return match && (!ft || b.type === ft) && (!fs || b.status === fs);
+    });
+    const header = ['Reference','Name','Event','Type','Guests','Date','Time','Status'];
+    const rows = data.map(b => [b.ref, b.name, `"${b.event}"`, b.type, b.guests, b.date, b.time, b.status]);
+    const csv = [header, ...rows].map(r => r.join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    a.download = 'event-bookings.csv';
+    a.click();
+  }
+
+  // Initial render with date sort
+  sortBy('date');
+</script>
+</body>
+</html>

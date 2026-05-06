@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Product Registration</title>
+
+<style>
+* {
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #1e3c72, #2a5298);
+  padding: 20px;
+}
+
+.card {
+  width: 700px;
+  background: rgba(255,255,255,0.95);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+h2 {
+  text-align: center;
+  color: #1e3c72;
+}
+
+.subtitle {
+  text-align: center;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+input, textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background: #2a5298;
+  color: white;
+  font-size: 15px;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #1e3c72;
+}
+
+h3 {
+  margin-top: 25px;
+  text-align: center;
+  color: #1e3c72;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+th {
+  background: #2a5298;
+  color: white;
+  padding: 10px;
+}
+
+td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+
+tr:nth-child(even) {
+  background: #f5f7fa;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <h2>Product Registration</h2>
+  <p class="subtitle">Enter product details</p>
+
+  <form>
+    <div class="form-group">
+      <label>Product Name</label>
+      <input type="text" placeholder="Laptop">
+    </div>
+
+    <div class="form-group">
+      <label>Product ID</label>
+      <input type="text" placeholder="PRD-001">
+    </div>
+
+    <div class="form-group">
+      <label>Price</label>
+      <input type="number" placeholder="Price">
+    </div>
+
+    <div class="form-group">
+      <label>Quantity</label>
+      <input type="number" placeholder="Quantity">
+    </div>
+
+    <div class="form-group">
+      <label>Description</label>
+      <textarea rows="3" placeholder="Product description"></textarea>
+    </div>
+
+    <button type="submit">Save Product</button>
+  </form>
+
+  <h3>Customer Purchase List</h3>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Customer Name</th>
+        <th>Product Bought</th>
+        <th>Quantity</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr>
+        <td>Alva</td>
+        <td>Laptop</td>
+        <td>1</td>
+      </tr>
+      <tr>
+        <td>Bella</td>
+        <td>Mouse</td>
+        <td>2</td>
+      </tr>
+      <tr>
+        <td>Chimene</td>
+        <td>Keyboard</td>
+        <td>1</td>
+      </tr>
+      <tr>
+        <td>Glady</td>
+        <td>Monitor</td>
+        <td>2</td>
+      </tr>
+      <tr>
+        <td>Joshua</td>
+        <td>USB Flash Disk</td>
+        <td>5</td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
+
+</body>
+</html>
